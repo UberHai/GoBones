@@ -8,14 +8,19 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func main() {
-	//Declare a new router
+//Create a new router and return to instantiate and test the router outside the main func
+func newRouter() *mux.Router {
 	r := mux.NewRouter()
-	//Declare methods for router
 	r.HandleFunc("/hello", handler).Methods("GET")
+	return r
+}
+
+func main() {
+	//Construct a new router
+	r := newRouter()
 	http.ListenAndServe(":8080", r)
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, "Hello Worlds!")
+	fmt.Fprint(w, "Hello World!")
 }

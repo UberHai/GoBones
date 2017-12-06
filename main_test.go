@@ -4,38 +4,42 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"io/ioutil"
 )
 
 func TestHandler(t *testing.T) {
-	//HTTP request that will be pass to handler
-	//method, route, request body
-	req, err := http.NewRequest("GET", "", nil)
-	//In case of error: stop testing
+	//Instantiate the router using the constructor func in main
+	r := newRouter()
+
+	//Create a new server using the "httptest" libs `NewServer` method
+	mockServer := httptest.NewServer(r)
+
+	//Mock server runs and exposes it's location in the URL attribute
+	resp, err := http.Get(mockServer.URL + "/hello")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	//Create an http recorder to act as target of http request
-	recorder := httptest.NewRecorder()
 
-	//Create an HTTP handler from our handler function as defined in main.go to test
-	hf := http.HandlerFunc(handler)
-
-	//Serve the HTTP Request to our recorder to execute the handler to test
-	hf.ServeHTTP(recorder, req)
-
-	//Check status code is that which we expect
-	if status := recorder.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v",
-			status, http.StatusOK)
+	//Ensure status: 200(ok)
+	if resp.StatusCode != http.StatusOK{
+		t.Errorf("Status should be 200: OK, got %d", resp.StatusCode)
 	}
 
-	//Check the response body is what we expect.
-	expected := `Hello World!`
-	actual := recorder.Body.String()
-	if actual != expected {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			actual, expected)
+	//Read response body and convert to string
+	defer resp.Body.Close()
+	//Read as bytes
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	//Convert bytes to string
+	respString := string(b)
+	expected := "Hello World!"
+
+	//Check if response matches the expected output
+	if respString != expected {
+		t.Errorf("Response should be \"%s\" got \"%s\"", expected, respString)
 	}
 
 }
